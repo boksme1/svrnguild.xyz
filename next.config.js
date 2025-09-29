@@ -2,7 +2,7 @@
 const nextConfig = {
   images: { unoptimized: true },
   experimental: {
-    serverComponentsExternalPackages: ['prisma', '@prisma/client']
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs']
   }
 };
 
