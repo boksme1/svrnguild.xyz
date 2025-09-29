@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  // Handle build-time execution when database isn't available
-  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
-    return NextResponse.json({
-      financials: { totalLootValue: 0, totalDistributed: 0, guildFund: 0, adminFee: 0 },
-      lootSummary: [],
-      topEarners: [],
-      recentSettlements: [],
-      integrityCheck: { totalLootValue: 0, totalDistributed: 0, guildFund: 0, adminFee: 0, isValid: true }
-    });
-  }
+  // Only load these modules at runtime, not during build
+  const { prisma } = await import('@/lib/db');
+  const { requireAdmin } = await import('@/lib/auth');
 
   try {
     requireAdmin(request);
