@@ -4,6 +4,28 @@ import { requireAdmin } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if we're in build environment (no database access)
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({
+        financials: {
+          totalLootValue: 0,
+          totalDistributed: 0,
+          guildFund: 0,
+          adminFee: 0
+        },
+        lootSummary: [],
+        topEarners: [],
+        recentSettlements: [],
+        integrityCheck: {
+          totalLootValue: 0,
+          totalDistributed: 0,
+          guildFund: 0,
+          adminFee: 0,
+          isValid: true
+        }
+      });
+    }
+
     requireAdmin(request);
 
     // Get financial overview
