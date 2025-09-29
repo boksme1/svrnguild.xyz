@@ -3,7 +3,13 @@ import { requireAdmin } from '@/lib/auth';
 import { syncAttendance } from '@/lib/salary-calculations';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
+  // Handle build-time execution when database isn't available
+  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Service not available during build' }, { status: 503 });
+  }
+
   try {
     requireAdmin(request);
     

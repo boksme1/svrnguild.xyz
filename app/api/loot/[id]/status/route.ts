@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth';
 import { LootStatus } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

@@ -4,8 +4,14 @@ import { requireAdmin } from '@/lib/auth';
 import { LootStatus } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // Handle build-time execution when database isn't available
+  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Service not available during build' }, { status: 503 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');

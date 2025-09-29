@@ -3,8 +3,14 @@ import { prisma } from '@/lib/db';
 import { verifyPassword, generateToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // Handle build-time execution when database isn't available
+  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Database not available during build' }, { status: 503 });
+  }
+
   try {
     const { username, password } = await request.json();
 

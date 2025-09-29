@@ -4,7 +4,13 @@ import { requireAdmin } from '@/lib/auth';
 import { BossType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export async function GET() {
+  // Handle build-time execution when database isn't available
+  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Service not available during build' }, { status: 503 });
+  }
+
   try {
     const bosses = await prisma.boss.findMany({
       orderBy: { name: 'asc' }

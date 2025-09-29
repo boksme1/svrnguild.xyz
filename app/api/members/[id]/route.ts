@@ -5,6 +5,7 @@ import { MemberRole } from '@prisma/client';
 import { addMemberRolePeriod, getCurrentMemberRole } from '@/lib/role-timeline';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

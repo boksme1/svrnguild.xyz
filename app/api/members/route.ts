@@ -5,8 +5,14 @@ import { MemberRole } from '@prisma/client';
 import { getMembersWithCurrentRoles, addMemberRolePeriod } from '@/lib/role-timeline';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
+  // Handle build-time execution when database isn't available
+  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Service not available during build' }, { status: 503 });
+  }
+
   try {
     const members = await getMembersWithCurrentRoles();
     return NextResponse.json(members);
