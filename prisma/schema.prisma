@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MemberRole {
+  GUILD_MASTER
+  CORE
+  MEMBER
+}
+
+model Member {
+  id             String           @id @default(cuid())
+  name           String           @unique
+  role           MemberRole       // Current active role (computed field)
+  promotionDate  DateTime?        // Deprecated - keeping for backward compatibility
+  demotionDate   DateTime?        // Deprecated - keeping for backward compatibility
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Relations
+  participations LootParticipation[]
+  attendances    Attendance[]
+  salaries       Salary[]
+  roleHistory    MemberRoleHistory[]
+}
+
+model MemberRoleHistory {
+  id        String     @id @default(cuid())
+  memberId  String
+  role      MemberRole
+  startDate DateTime
+  endDate   DateTime?  // null means currently active
+  reason    String?    // Optional reason for role change
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  // Relations
+  member    Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@index([memberId, startDate])
+  @@index([memberId, endDate])
+}
+
+enum BossType {
+  NORMAL
+  FIXED
+}
+
+model Boss {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  type         BossType
+  respawnTime  Int      // minutes
+  lastKilled   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  lootItems    LootItem[]
+}
+
+enum LootStatus {
+  PENDING
+  SOLD
+  SETTLED
+}
+
+model LootItem {
+  id              String              @id @default(cuid())
+  name            String
+  value           Float
+  dateAcquired    DateTime
+  status          LootStatus          @default(PENDING)
+  bossId          String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  // Relations
+  boss            Boss                @relation(fields: [bossId], references: [id], onDelete: Cascade)
+  participations  LootParticipation[]
+  salaries        Salary[]
+}
+
+model LootParticipation {
+  id         String   @id @default(cuid())
+  memberId   String
+  lootItemId String
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  lootItem   LootItem @relation(fields: [lootItemId], references: [id], onDelete: Cascade)
+  
+  @@unique([memberId, lootItemId])
+}
+
+model Salary {
+  id           String     @id @default(cuid())
+  memberId     String
+  lootItemId   String
+  amount       Float
+  settlementId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  // Relations
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  lootItem     LootItem   @relation(fields: [lootItemId], references: [id], onDelete: Cascade)
+  settlement   Settlement? @relation(fields: [settlementId], references: [id])
+  
+  @@unique([memberId, lootItemId])
+}
+
+model Settlement {
+  id              String   @id @default(cuid())
+  totalLootValue  Float
+  totalDistributed Float
+  guildFund       Float
+  adminFee        Float
+  settledAt       DateTime @default(now())
+  
+  // Relations
+  salaries        Salary[]
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  memberId  String
+  week      String   // Format: YYYY-WW
+  attended  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@unique([memberId, week])
+}
+
+model GuildFinancials {
+  id               String   @id @default(cuid())
+  totalLootValue   Float    @default(0)
+  totalDistributed Float    @default(0)
+  guildFund        Float    @default(0)
+  adminFee         Float    @default(0)
+  updatedAt        DateTime @updatedAt
+}
