@@ -1,38 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { verifyPassword, generateToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
-  // Handle build-time execution when database isn't available
-  if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
-    return NextResponse.json({ error: 'Database not available during build' }, { status: 503 });
-  }
-
   try {
-    const { username, password } = await request.json();
+    const body = await request.json();
+    const { username, password } = body;
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
     }
 
+    // Import at runtime only
+    const { PrismaClient } = await import('@prisma/client');
+    const bcrypt = await import('bcryptjs');
+    const jwt = await import('jsonwebtoken');
+
+    const prisma = new PrismaClient();
+
     const admin = await prisma.admin.findUnique({
       where: { username }
     });
 
-    if (!admin || !verifyPassword(password, admin.password)) {
+    if (!admin || !bcrypt.compareSync(password, admin.password)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const token = generateToken({ id: admin.id, username: admin.username });
+    const token = jwt.sign(
+      { id: admin.id, username: admin.username },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '24h' }
+    );
 
-    return NextResponse.json({ 
-      token, 
-      admin: { id: admin.id, username: admin.username } 
+    return NextResponse.json({
+      token,
+      admin: { id: admin.id, username: admin.username }
     });
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }
 }
