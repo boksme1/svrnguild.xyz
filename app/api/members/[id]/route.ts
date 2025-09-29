@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth';
 import { MemberRole } from '@prisma/client';
 import { addMemberRolePeriod, getCurrentMemberRole } from '@/lib/role-timeline';
 
+export const dynamic = 'force-dynamic';
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

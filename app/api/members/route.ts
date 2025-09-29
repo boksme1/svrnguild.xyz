@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/auth';
 import { MemberRole } from '@prisma/client';
 import { getMembersWithCurrentRoles, addMemberRolePeriod } from '@/lib/role-timeline';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const members = await getMembersWithCurrentRoles();

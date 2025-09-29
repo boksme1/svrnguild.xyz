@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { getMemberRoleHistory, addMemberRolePeriod } from '@/lib/role-timeline';
 import { MemberRole } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
 interface RouteParams {
   params: { id: string };
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { seedDatabase } from '@/lib/seed-data';
 
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     await seedDatabase();
